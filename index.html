@@ -3,258 +3,270 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Check in</title>
+<title>Attendance</title>
 <script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js"></script>
 <style>
   :root {
-    --ink:      #12161c;
-    --panel:    #1b212b;
-    --line:     #2b3442;
-    --text:     #e6ebf2;
-    --dim:      #8b97a8;
-    --good:     #4ade80;
-    --marginal: #fbbf24;
-    --bad:      #f87171;
+    --bg:     #ffffff;
+    --panel:  #f5f6f8;
+    --line:   #e1e4e9;
+    --text:   #1a1d21;
+    --dim:    #616a75;
+    --accent: #5b5fc7;
+    --good:   #0f7b3f;
+    --warn:   #9a6700;
+    --bad:    #b32d2e;
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--ink); color: var(--text); }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:     #1f1f1f;
+      --panel:  #2b2b2b;
+      --line:   #3d3d3d;
+      --text:   #e8e8e8;
+      --dim:    #9aa2ad;
+      --accent: #7f85f5;
+      --good:   #5cc98a;
+      --warn:   #e0b341;
+      --bad:    #f07b7c;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
   body {
     font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 20px 18px 48px;
-    max-width: 560px;
+    padding: 24px 20px 40px;
+    max-width: 480px;
     margin: 0 auto;
     -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 17px; font-weight: 600; margin: 0 0 2px; letter-spacing: -0.01em; }
-  .sub { color: var(--dim); font-size: 13px; margin-bottom: 22px; }
 
-  .panel {
+  .who { font-size: 13px; color: var(--dim); margin-bottom: 3px; }
+  .day { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 26px; }
+
+  .card {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 14px;
+    border-radius: 12px;
+    padding: 22px 20px;
+    margin-bottom: 18px;
+    min-height: 108px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
-  .stage { font-size: 13px; color: var(--dim); margin-bottom: 6px; }
-  .headline { font-size: 21px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; }
-  .note { font-size: 13px; color: var(--dim); }
-  .good     { color: var(--good); }
-  .marginal { color: var(--marginal); }
-  .bad      { color: var(--bad); }
+  .state { font-size: 19px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 5px; }
+  .detail { font-size: 14px; color: var(--dim); }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad  { color: var(--bad); }
 
   button {
     width: 100%;
-    padding: 15px;
-    font: 600 16px/1 inherit;
-    color: var(--ink);
-    background: var(--text);
+    padding: 18px;
+    font: 600 17px/1 inherit;
+    color: #fff;
+    background: var(--accent);
     border: 0;
-    border-radius: 9px;
+    border-radius: 10px;
     cursor: pointer;
   }
-  button:active { opacity: .8; }
-  button:disabled { opacity: .4; cursor: default; }
-  button:focus-visible { outline: 2px solid var(--good); outline-offset: 2px; }
+  button:active { filter: brightness(.9); }
+  button:disabled { opacity: .5; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 
-  fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 22px 0 0; }
-  legend { color: var(--dim); font-size: 13px; padding: 0 6px; }
-  label { display: block; font-size: 13px; color: var(--dim); margin: 12px 0 4px; }
-  input[type=url], input[type=text] {
-    width: 100%;
-    padding: 10px 12px;
-    font: 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--text);
-    background: var(--ink);
-    border: 1px solid var(--line);
-    border-radius: 7px;
+  .spinner {
+    display: inline-block;
+    width: 15px; height: 15px;
+    margin-right: 9px;
+    vertical-align: -2px;
+    border: 2px solid rgba(255,255,255,.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
   }
-  input:focus-visible { outline: 2px solid var(--good); outline-offset: 1px; }
-  .check { display: flex; align-items: center; gap: 9px; margin-top: 14px; font-size: 13px; color: var(--dim); }
-  .check input { width: 17px; height: 17px; accent-color: var(--good); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2s; }
+  }
 
-  pre {
-    background: var(--ink);
+  .identify { margin-top: 26px; }
+  .identify label { display: block; font-size: 13px; color: var(--dim); margin-bottom: 6px; }
+  .identify input {
+    width: 100%;
+    padding: 12px;
+    font: 15px inherit;
+    color: var(--text);
+    background: var(--bg);
     border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 13px;
-    margin: 14px 0 0;
-    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    white-space: pre-wrap;
-    word-break: break-word;
-    max-height: 320px;
-    overflow: auto;
   }
-  .grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 7px 16px;
-    font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    margin-top: 16px; padding-top: 16px;
-    border-top: 1px solid var(--line);
+  .identify input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .meta {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.7;
   }
-  .grid dt { color: var(--dim); }
-  .grid dd { margin: 0; word-break: break-all; }
 </style>
 </head>
 <body>
 
-<h1>Check in</h1>
-<p class="sub">Reads your location, then posts it to the flow.</p>
+<div class="who" id="who">Signing you in…</div>
+<div class="day" id="day"></div>
 
-<div class="panel">
-  <div class="stage" id="stage">Ready</div>
-  <div class="headline" id="headline">Not checked in</div>
-  <div class="note" id="note">Paste your flow URL below, then tap check in.</div>
-
-  <dl class="grid" id="detail" hidden>
-    <dt>source</dt><dd id="d-source">—</dd>
-    <dt>lat</dt><dd id="d-lat">—</dd>
-    <dt>lon</dt><dd id="d-lon">—</dd>
-    <dt>accuracy</dt><dd id="d-acc">—</dd>
-    <dt>round trip</dt><dd id="d-ms">—</dd>
-  </dl>
+<div class="card">
+  <div class="state" id="state">Ready</div>
+  <div class="detail" id="detail">Tap below when you arrive or leave.</div>
 </div>
 
-<button id="btn">Check in</button>
+<button id="btn" disabled>Check in</button>
 
-<pre id="log" hidden></pre>
+<div class="identify" id="identify" hidden>
+  <label for="email">Work email</label>
+  <input id="email" type="email" inputmode="email" autocomplete="email"
+         placeholder="you@bpsme.com">
+</div>
 
-<fieldset>
-  <legend>Test settings</legend>
-
-  <label for="url">Flow URL</label>
-  <input id="url" type="url" placeholder="https://prod-00.westeurope.logic.azure.com/workflows/...">
-
-  <label for="email">Email to send</label>
-  <input id="email" type="text" placeholder="you@bpsme.com">
-
-  <label class="check">
-    <input type="checkbox" id="asjson">
-    Send as application/json (triggers a CORS preflight)
-  </label>
-
-  <p class="note" style="margin-top:14px">
-    Nothing here is saved. Re-enter after a reload.
-  </p>
-</fieldset>
+<p class="meta" id="meta"></p>
 
 <script>
+const FLOW_URL = "https://aa4be80f69d6e7d181ad5427fec619.5c.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/04/workflows/2c83c02849214eec942b78d326270572/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=42vppYo6TNDpNw6t3CXQreat6iKfOU9jzYTJMF03g2c";
+
+const MAX_ACCURACY = 100;   // metres — must match the flow's gate
+
 const $ = id => document.getElementById(id);
-const MAX_ACCURACY = 100;
+let userEmail = null;
 let inTeams = false;
 
+$('day').textContent = new Date().toLocaleDateString(undefined,
+  { weekday: 'long', day: 'numeric', month: 'long' });
+
+// ---- identify the person --------------------------------------------------
+
 microsoftTeams.app.initialize()
-  .then(() => { inTeams = true; $('stage').textContent = 'Teams SDK ready'; })
-  .catch(() => { $('stage').textContent = 'Running outside Teams'; });
+  .then(() => microsoftTeams.app.getContext())
+  .then(ctx => {
+    inTeams = true;
+    userEmail = ctx.user && (ctx.user.userPrincipalName || ctx.user.loginHint);
+    const name = ctx.user && ctx.user.displayName;
+    if (userEmail) {
+      $('who').textContent = name || userEmail;
+      ready();
+    } else {
+      askForEmail('Teams did not share your account.');
+    }
+    if (ctx.app && ctx.app.theme) applyTeamsTheme(ctx.app.theme);
+    microsoftTeams.app.registerOnThemeChangeHandler(applyTeamsTheme);
+  })
+  .catch(() => askForEmail('Not running inside Teams.'));
 
-$('btn').addEventListener('click', checkIn);
+function askForEmail(reason) {
+  $('who').textContent = reason + ' Enter your email below.';
+  $('identify').hidden = false;
+  $('email').addEventListener('input', () => {
+    userEmail = $('email').value.trim();
+    $('btn').disabled = !userEmail.includes('@');
+  });
+}
 
-async function checkIn() {
-  const url = $('url').value.trim();
-  if (!url) { fail('No flow URL', 'Paste the flow URL in the settings below.'); return; }
+function ready() { $('btn').disabled = false; }
 
+function applyTeamsTheme(theme) {
+  // Teams passes "default", "dark" or "contrast"; only dark needs forcing,
+  // the rest already match the OS-level media query.
+  document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+}
+
+// ---- the check-in ---------------------------------------------------------
+
+$('btn').addEventListener('click', run);
+
+async function run() {
   const btn = $('btn');
   btn.disabled = true;
-  btn.textContent = 'Locating…';
-  $('log').hidden = true;
-  $('stage').textContent = 'Getting location';
-  $('headline').textContent = 'Locating';
-  $('headline').className = 'headline';
-  $('note').textContent = 'This can take a few seconds.';
+  btn.innerHTML = '<span class="spinner"></span>Finding you';
+  set('Locating', 'Hold still for a moment.', '');
+  $('meta').textContent = '';
 
   let fix;
   try {
     fix = await getFix();
   } catch (e) {
-    fail('No location', String(e.message || e));
-    reset(btn); return;
+    set('No location', String(e.message || e) +
+        ' Check that location is switched on for Teams.', 'bad');
+    resetButton(btn); return;
   }
 
   const acc = Math.round(fix.acc);
-  $('detail').hidden = false;
-  $('d-source').textContent = fix.src;
-  $('d-lat').textContent = fix.lat.toFixed(6);
-  $('d-lon').textContent = fix.lon.toFixed(6);
-  $('d-acc').innerHTML = '<span class="' + accClass(acc) + '">' + acc + ' m</span>';
-  $('d-ms').textContent = '—';
 
   if (acc > MAX_ACCURACY) {
-    fail('Location too vague',
-         'Accurate to only ' + acc + ' m. Move near a window or step outside and try again.');
-    reset(btn); return;
+    set('Signal too weak',
+        'Your position is only accurate to about ' + acc +
+        ' m. Move near a window or step outside, then try again.', 'warn');
+    $('meta').textContent = fix.src;
+    resetButton(btn); return;
   }
 
-  btn.textContent = 'Sending…';
-  $('stage').textContent = 'Posting to flow';
-  $('note').textContent = 'Waiting for a response.';
+  btn.innerHTML = '<span class="spinner"></span>Recording';
+  set('Sending', 'Almost done.', '');
 
-  const payload = {
-    lat: fix.lat,
-    lon: fix.lon,
-    accuracy: acc,
-    email: $('email').value.trim(),
-    action: 'checkin'
-  };
-
-  const started = performance.now();
   try {
-    const res = await fetch(url, {
+    const res = await fetch(FLOW_URL, {
       method: 'POST',
-      headers: { 'Content-Type': $('asjson').checked ? 'application/json' : 'text/plain' },
-      body: JSON.stringify(payload)
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        lat: fix.lat,
+        lon: fix.lon,
+        accuracy: acc,
+        email: userEmail,
+        action: 'checkin'
+      })
     });
-    const ms = Math.round(performance.now() - started);
-    const text = await res.text();
-    $('d-ms').textContent = ms + ' ms';
+    const text = (await res.text()).trim();
 
-    if (!res.ok) {
-      fail('Flow returned ' + res.status, res.statusText || 'See the response below.');
-      show('HTTP ' + res.status + '\n\n' + (text || '(empty body)'));
+    if (res.ok) {
+      set('Done', text || 'Recorded.', 'good');
+      btn.textContent = 'Tap again to check out';
     } else {
-      $('stage').textContent = 'Done';
-      $('headline').textContent = 'Flow responded';
-      $('headline').className = 'headline good';
-      $('note').textContent = 'HTTP ' + res.status + ' in ' + ms + ' ms.';
-      show(text || '(empty body — did you add a Response action?)');
+      set('Not recorded', text || ('The server returned ' + res.status + '.'), 'bad');
     }
+    $('meta').textContent = fix.src + ' · accurate to ' + acc + ' m';
   } catch (e) {
-    const ms = Math.round(performance.now() - started);
-    $('d-ms').textContent = ms + ' ms';
-    fail('Request blocked', 'Usually CORS. See below.');
-    show('fetch failed after ' + ms + ' ms\n\n' + String(e.message || e) +
-         '\n\nIf this says "Failed to fetch", the browser blocked it before the flow ' +
-         'was reached. Try unticking application/json, and add an ' +
-         'Access-Control-Allow-Origin: * header to the flow\'s Response action.' +
-         '\n\nPayload that would have been sent:\n' + JSON.stringify(payload, null, 2));
+    set('Could not reach the server',
+        'Check your connection and try again.', 'bad');
+    $('meta').textContent = String(e.message || e);
   }
-  reset(btn);
+  btn.disabled = false;
 }
 
 async function getFix() {
   try {
     const loc = await microsoftTeams.geoLocation.getCurrentLocation();
-    return { lat: loc.latitude, lon: loc.longitude, acc: loc.accuracy, src: 'Teams API' };
+    return { lat: loc.latitude, lon: loc.longitude, acc: loc.accuracy, src: 'Teams location' };
   } catch (teamsErr) {
     const p = await new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error('Geolocation unavailable here.'));
-      navigator.geolocation.getCurrentPosition(resolve, e => reject(new Error(e.message)),
+      if (!navigator.geolocation) return reject(new Error('Location is unavailable here.'));
+      navigator.geolocation.getCurrentPosition(resolve,
+        e => reject(new Error(e.message)),
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     });
     return {
       lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy,
-      src: 'Browser API' + (inTeams ? ' (Teams API failed)' : '')
+      src: inTeams ? 'Device location' : 'Browser location'
     };
   }
 }
 
-function accClass(a) { return a <= 50 ? 'good' : a <= MAX_ACCURACY ? 'marginal' : 'bad'; }
-function reset(btn) { btn.disabled = false; btn.textContent = 'Check in'; }
-function show(t) { $('log').hidden = false; $('log').textContent = t; }
-function fail(head, note) {
-  $('stage').textContent = 'Stopped';
-  $('headline').textContent = head;
-  $('headline').className = 'headline bad';
-  $('note').textContent = note;
+function set(state, detail, cls) {
+  $('state').textContent = state;
+  $('state').className = 'state ' + (cls || '');
+  $('detail').textContent = detail;
+}
+
+function resetButton(btn) {
+  btn.disabled = false;
+  btn.textContent = 'Try again';
 }
 </script>
 </body>
